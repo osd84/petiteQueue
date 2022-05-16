@@ -92,7 +92,7 @@ $jobId = $queue->push(['MyClass', 'simpleMethod'], ['some','args']);
 $jobId = $queue->push(['MyClass', 'simpleMethod'], ['some','args'], ['queue' => 'critic']);
 $jobId = $queue->push(['MyClass', 'simpleMethod'], ['some','args'], ['queue' => 'critic']);
 $result = $queue->flush('critic');
-btrAssertEq(2, $result, "Flush all queue 'critic");
+btrAssertEq(2, $result, "Flush all queue 'critic'");
 btrAssertEq(1, count($queue->jobs()), 'Jobs successful deleted');
 
 // print test results
