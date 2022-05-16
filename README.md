@@ -34,7 +34,9 @@ define('ROOT', dirname(__FILE__, 2));
 require_once(ROOT . '/src/petitcitron/petitequeue/Queue.php');
 
 $myQueue = new Queue(['database' => $testBdd, 'logging' => true]);
-$myQueue->push('MyClass::method', ['some','args'])
+$myQueue->push('myFunction', ['some','args'])
+$myQueue->push('MyClass::staticMethod', ['some','args'])
+$myQueue->push(['MyClass','method'], ['some','args'])
 
 $myQueue->jobs() // list waiting jobs
 $myQueue->run() // run All jobs
