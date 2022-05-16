@@ -58,7 +58,7 @@ php7.4 tests/tests.php
 
 Out of test must be :
 
-```sql
+```log
 /usr/bin/php7.4 ./tests/tests.php
 
 -----------
@@ -84,7 +84,7 @@ test 18 :: OK ✔ :: Force drop a job
 test 19 :: OK ✔ :: Job successful deleted
 test 20 :: OK ✔ :: Clear all jobs
 test 21 :: OK ✔ :: Jobs successful deleted
-test 22 :: OK ✔ :: Flush all queue 'critic
+test 22 :: OK ✔ :: Flush all queue 'critic'
 test 23 :: OK ✔ :: Jobs successful deleted
 
 -----------
