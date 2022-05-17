@@ -235,7 +235,7 @@ class Queue
         $con = $this->_getConn();
 
         $jobId = intval($jobId);
-        $job = $con->execute('SELECT * FROM jobs WHERE id = ?', [$jobId], ['integer'])->fetch('assoc');
+        $job = $con->get('SELECT * FROM jobs WHERE id = ?', [$jobId], ['integer']);
         if (empty($job)) {
             return null;
         }
@@ -355,11 +355,11 @@ class Queue
         $con = $this->_getConn();
 
         if (empty($queue)) {
-            $jobs = $con->execute('SELECT * FROM jobs')->fetchAll('assoc');
+            $jobs = $con->getAll('SELECT * FROM jobs');
         }
         else {
-            $jobs = $con->execute('SELECT * FROM jobs WHERE queue = :queue',
-                [$queue], ['string'])->fetchAll('assoc');
+            $jobs = $con->getAll('SELECT * FROM jobs WHERE queue = :queue',
+                [$queue], ['string']);
         }
 
         if (empty($jobs)) {

@@ -314,6 +314,96 @@ class Connection implements ConnectionInterface
     }
 
     /**
+     * Alias/Shortcut pour $execute(...)->fetch('assoc')
+     *
+     * @param string $sql SQL to be executed and interpolated with $params
+     * @param array $params list or associative array of params to be interpolated in $sql as values
+     * @param array $types list or associative array of types to be used for casting values in query
+     * @return array of first row
+     */
+    public function get(string $sql, array $params = [], array $types = [])
+    {
+        return $this->execute($sql, $params, $types)->fetch('assoc');
+    }
+
+    /**
+     * Alias/Shortcut pour $execute(...)->fetch('assoc')
+     *
+     * @param string $sql SQL to be executed and interpolated with $params
+     * @param array $params list or associative array of params to be interpolated in $sql as values
+     * @param array $types list or associative array of types to be used for casting values in query
+     * @return array of first row
+     */
+    public function getOrFail(string $sql, array $params = [], array $types = [])
+    {
+        $r = $this->execute($sql, $params, $types)->fetch('assoc');
+        if(empty($r)) {
+            throw new DatabaseException('Query return nothing, No result found');
+        }
+        return $r;
+     }
+
+    /**
+     * Alias/Shortcut pour $execute(...)->fetchAll('assoc')
+     *
+     * @param string $sql SQL to be executed and interpolated with $params
+     * @param array $params list or associative array of params to be interpolated in $sql as values
+     * @param array $types list or associative array of types to be used for casting values in query
+     * @return array of rows
+     */
+    public function getAll(string $sql, array $params = [], array $types = [])
+    {
+        return $this->execute($sql, $params, $types)->fetchAll('assoc');
+    }
+
+    /**
+     * Alias/Shortcut pour $execute('SELECT * FROM <table> WHERE id = <id>')->fetch('assoc')
+     *
+     * @return array||false of row, retourne false si pas en place
+     */
+    public function getById(string $table, int $id)
+    {
+        $table = str_replace(' ', '', $table);
+        if(!$this->tableExist($table)) {
+            throw new DatabaseException("Table $table doesn't exist, query aborted");
+        }
+        return $this->execute("SELECT * FROM $table WHERE id = ?", [$id], ['integer'])->fetch('assoc');
+    }
+
+    /**
+     * Retourne le dernier Enregistrement via ID
+     * @param string $table nom de la table
+     */
+    public function getLastById(string $table)
+    {
+        if(!$this->tableExist($table)) {
+            throw new \LogicException("Requête impossible, la Table $table n'existe pas");
+        }
+        return $this->execute("SELECT * FROM $table ORDER BY id DESC LIMIT 1")->fetch('assoc');
+
+    }
+
+
+    public function tableExist($table_name): bool
+    {
+        $r = $this->execute("SELECT count(*) as nb FROM information_schema.TABLES WHERE table_name = ? AND table_schema = database()",
+            [$table_name])->fetch('assoc');
+        if (empty($r['nb'])) {
+            return false;
+        }
+        return true;
+    }
+
+    public function indexExist($table_name, $index_name): bool
+    {
+        $r = $this->execute("SELECT count(*) as nb FROM information_schema.statistics WHERE table_name = ? AND index_name = ? AND table_schema = database()",
+        [$table_name, $index_name])->fetch('assoc');
+        if(empty($r['nb'])) {
+            return false;
+        }
+        return true;
+    }
+    /**
      * Compiles a Query object into a SQL string according to the dialect for this
      * connection's driver
      *
