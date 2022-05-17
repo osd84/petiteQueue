@@ -6,7 +6,7 @@ use petitcitron\PetiteQueue\Queue;
 
 // oldschool bootstrap
 define('ROOT', dirname(__FILE__, 2));
-require_once(ROOT . '/src/petitcitron/petitequeue/Queue.php');
+require_once(ROOT . '/src/bootstrap.php');
 
 // setup BrutalTestRunner
 require_once(ROOT .  '/tests/brutaltestrunner/BrutalTestRunner.php');

@@ -12,11 +12,6 @@ use petitcitron\lightLogger\NoLogger;
 if (!defined('ROOT')) {
     define('ROOT', dirname(dirname(__FILE__)));
 }
-// cakephp database lib
-require_once(ROOT . '/src/vendors/database/bootstrap.php');
-// Log lib
-require_once(ROOT . '/src/vendors/lightLogger/Logger.php');
-require_once(ROOT . '/src/vendors/lightLogger/NoLogger.php');
 
 class Queue
 {

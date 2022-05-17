@@ -31,7 +31,8 @@ Si more in /tests/tests.php
 use petitcitron\PetiteQueue\Queue;
 
 define('ROOT', dirname(__FILE__, 2));
-require_once(ROOT . '/src/petitcitron/petitequeue/Queue.php');
+require_once(ROOT . '/src/bootstrap.php');
+// require_once(ROOT . 'my_vendor_dir/petitequeue/src/bootstrap.php');
 
 $myQueue = new Queue(['database' => $testBdd, 'logging' => true]);
 $myQueue->push('myFunction', ['some','args'])
