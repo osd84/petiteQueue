@@ -1,0 +1,39 @@
+{
+  "name": "petitcitron/petitequeue",
+  "description": "A stupid job/worker system library using Sqlite",
+  "type": "library",
+  "license": "MIT license",
+  "authors": [
+    {
+      "name": "PetitCitron"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/PetitCitron/BrutalTestRunner"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/PetitCitron/lightlogger"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/PetitCitron/database"
+    }
+  ],
+  "require": {
+    "php": ">=7.2.0",
+    "petitcitron/lightlogger": "^1",
+    "petitcitron/database": "^1",
+    "ext-pdo": "*"
+  },
+  "require-dev": {
+    "petitcitron/brutaltestrunner": "^2"
+  },
+  "autoload": {
+    "psr-4": {
+      "PetitCitron\\PetiteQueue\\": "src/"
+    }
+  }
+}

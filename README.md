@@ -2,15 +2,13 @@
 # petiteQueue
 
 A stupid and brutal **job/worker system** library only using Sqlite.<br>
-Small manually freezed deps. <br>
 Lightly inpired by <a href="https://github.com/josegonzalez/php-queuesadilla">php-queuesadilla</a><br><br>
 <br>
 **Security** : Never expose this lib on /webroot directory, it was no coded for that. Keep it in no browsable dir.
 
-## No Composer / No PSR firendly
+## No PSR firendly
 
-**No composer**, because i don't like it.<br>
-I don't care about PSR too.  🤷‍♂️ 
+I don't care about PSR.  🤷‍♂️ 
 
 
 ## Requirements
@@ -18,21 +16,41 @@ I don't care about PSR too.  🤷‍♂️
 - PHP 7.4+
 - php_pdo_sqlite
 
-## Installation
+## Stable
 
 
-1  . Unzip the Lib <br>
-2  . Import And Play
+```sh
+wget https://github.com/PetitCitron/petiteQueue/archive/refs/tags/v1.0.0.zip
+unzip v1.0.0.zip
+cd petiteQueue-1.0.0/
+composer install --no-dev
+```
 
-Si more in /tests/tests.php
+As a Lib, Add in composer.json
+
+```json
+"require": {
+    "petitcitron/petitequeue": "^v1"
+  },
+"repositories": [
+{
+  "type": "vcs",
+  "url": "https://github.com/PetitCitron/petiteQueue"
+}
+   ],
+```
+```sh
+composer update
+```
+
+## Usage
+
 
 ```php
 <?php
-use petitcitron\PetiteQueue\Queue;
+use PetitCitron\PetiteQueue\Queue;
 
-define('ROOT', dirname(__FILE__, 2));
-require_once(ROOT . '/src/bootstrap.php');
-// require_once(ROOT . 'my_vendor_dir/petitequeue/src/bootstrap.php');
+require dirname(__DIR__) . '/vendor/autoload.php';
 
 $myQueue = new Queue(['database' => $testBdd, 'logging' => true]);
 $myQueue->push('myFunction', ['some','args'])

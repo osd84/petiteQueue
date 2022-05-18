@@ -1,12 +1,12 @@
 <?php
 
-namespace petitcitron\PetiteQueue;
+namespace PetitCitron\PetiteQueue;
 
 use DateTime;
 use Cake\Database\Connection;
 use Cake\Database\Driver\Sqlite;
-use petitcitron\lightLogger\Logger;
-use petitcitron\lightLogger\NoLogger;
+use PetitCitron\LightLogger\Logger;
+use PetitCitron\LightLogger\NoLogger;
 
 // oldschool bootstrap
 if (!defined('ROOT')) {
