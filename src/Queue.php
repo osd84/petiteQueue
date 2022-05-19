@@ -159,6 +159,7 @@ class Queue
 
         if ($q->rowCount() == 1) {
             $this->lastJobId = $q->lastInsertId();
+            $this->log->info('petitequeue:Queue::push() - add Job ' . $data);
             return $this->lastJobId;
         }
 
@@ -236,6 +237,7 @@ class Queue
         $jobId = intval($jobId);
         $job = $con->get('SELECT * FROM jobs WHERE id = ?', [$jobId], ['integer']);
         if (empty($job)) {
+            $this->log->info("petitequeue:Queue::job() - Job $jobId NotFound ");
             return null;
         }
         return $job;
@@ -253,6 +255,7 @@ class Queue
         if(empty($job)) {
             throw new \LogicException('Job not found, force fail');
         }
+        $this->log->info("petitequeue:Queue::force() - Job $jobId");
         return $this->_perform($job);
     }
 
@@ -265,6 +268,8 @@ class Queue
      */
     public function _perform($job)
     {
+        $this->log->info("petitequeue:Queue::_perform() - trying {$job['id']} Job");
+
         $elemToCall = json_decode($job['data'], true);
         $success = false;
 
@@ -362,8 +367,10 @@ class Queue
         }
 
         if (empty($jobs)) {
+            $this->log->info("petitequeue:Queue::jobs() - No Jobs Found");
             return [];
         }
+        $this->log->info('petitequeue:Queue::jobs() - ' . count($jobs) .' Found');
         return $jobs;
     }
 
@@ -390,6 +397,7 @@ class Queue
     {
         $con = $this->_getConn();
         $jobId = intval($jobId);
+        $this->log->info("petitequeue:Queue::drop() $jobId is drop");
         return $con->delete('jobs', ['id' => $jobId], ['integer'])->count();
     }
 
@@ -402,6 +410,7 @@ class Queue
     public function flush($queueName)
     {
         $con = $this->_getConn();
+        $this->log->info("petitequeue:Queue::flush() $queueName Jobs are drop");
         return $con->delete('jobs', ['queue' => trim($queueName)], ['string'])->count();
     }
 
@@ -414,6 +423,7 @@ class Queue
     public function clear()
     {
         $con = $this->_getConn();
+        $this->log->info("petitequeue:Queue::clear() All Jobs are drop");
         return $con->execute('DELETE FROM jobs WHERE 1')->count();
     }
 
