@@ -21,7 +21,7 @@ class Queue
     protected $lastJobId = null;
     protected $connexion = null;
     protected $log = null;
-    private $conf = ['database' => ROOT . '/datas/queue.db', 'logging' => false];
+    private $conf = ['database' => ROOT . '/datas/queue.db', 'logging' => false, 'logfile' => 'petitequeue.log'];
 
     /**
      * $conf [
@@ -101,7 +101,7 @@ class Queue
     public function _setupLogger()
     {
         if ($this->conf['logging']) {
-            $this->log = new Logger(ROOT . '/logs/', 'petitequeue.log');
+            $this->log = new Logger(ROOT . '/logs/', $this->conf['logfile']);
             $this->log->info('petitequeue:Queue - Log enabled');
         }
         else {

@@ -21,11 +21,9 @@ if(file_exists($testBdd)) {
 }
 
 // 1st running
-$queue = new Queue(['database' => $testBdd, 'logging' => true]);
+$queue = new Queue(['database' => $testBdd, 'logging' => true, 'logfile' => 'petitequeue-custom.log']);
 $feshInstall = $queue->isFreshInstall();
 $btr->assertEqual(true, $feshInstall, 'Detect as a Fresh DB sqlite install');
-// log system work
-$btr->assertEqual(true, file_exists(ROOT2 . '/logs/petitequeue.log'), 'Log system work');
 
 // push in queue
 $jobId = $queue->push('MyClass::staticMethod', ['some','args']);
@@ -95,6 +93,10 @@ $jobId = $queue->push(['MyClass', 'simpleMethod'], ['some','args'], ['queue' => 
 $result = $queue->flush('critic');
 $btr->assertEqual(2, $result, "Flush all queue 'critic'");
 $btr->assertEqual(1, count($queue->jobs()), 'Jobs successful deleted');
+unset($queue);
+
+// log system work
+$btr->assertEqual(true, file_exists(ROOT2 . '/logs/petitequeue-custom.log'), 'Log system work');
 
 // print test results
 $btr->footer();
