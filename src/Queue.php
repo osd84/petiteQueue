@@ -85,8 +85,7 @@ class Queue
         if (empty($this->connexion)) {
             $driver = new Sqlite([
                 'database' => $this->conf['database'],
-                'username' => 'root',
-                'password' => 'secret',
+                'cacheMetadata' => true,
             ]);
             $this->connexion = new Connection([
                 'driver' => $driver,
