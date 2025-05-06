@@ -51,7 +51,7 @@ composer update
 
 ```php
 <?php
-use PetitCitron\PetiteQueue\Queue;
+use osd84\PetiteQueue\Queue;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 

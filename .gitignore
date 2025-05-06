@@ -43,3 +43,5 @@ nbproject/*
 .sass-cache/
 /vendor/*
 composer.lock
+/package.xml
+./datas/queue-test.db

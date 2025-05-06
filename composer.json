@@ -5,27 +5,12 @@
   "license": "MIT",
   "authors": [
     {
-      "name": "PetitCitron"
-    }
-  ],
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/PetitCitron/BrutalTestRunner"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/PetitCitron/lightlogger"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/PetitCitron/database"
+      "name": "osd84"
     }
   ],
   "require": {
     "php": ">=7.2.0",
-    "petitcitron/lightlogger": "^1",
-    "petitcitron/database": "^1",
+    "osd84/lightlogger": "^1",
     "ext-pdo": "*"
   },
   "require-dev": {
@@ -33,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "PetitCitron\\PetiteQueue\\": "src/"
+      "osd84\\PetiteQueue\\": "src/"
     }
   }
 }
