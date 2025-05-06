@@ -2,7 +2,7 @@
   "name": "osd84/petitequeue",
   "description": "A stupid job/worker system library using Sqlite",
   "type": "library",
-  "license": "MIT license",
+  "license": "MIT",
   "authors": [
     {
       "name": "PetitCitron"
