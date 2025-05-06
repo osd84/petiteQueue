@@ -11,7 +11,8 @@
   "require": {
     "php": ">=7.2.0",
     "osd84/lightlogger": "^1",
-    "ext-pdo": "*"
+    "ext-pdo": "*",
+    "ext-json": "*"
   },
   "require-dev": {
     "osd84/brutaltestrunner": "^2"
