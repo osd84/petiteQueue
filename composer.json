@@ -1,5 +1,5 @@
 {
-  "name": "petitcitron/petitequeue",
+  "name": "osd84/petitequeue",
   "description": "A stupid job/worker system library using Sqlite",
   "type": "library",
   "license": "MIT license",
@@ -29,7 +29,7 @@
     "ext-pdo": "*"
   },
   "require-dev": {
-    "petitcitron/brutaltestrunner": "^2"
+    "osd84/brutaltestrunner": "^2"
   },
   "autoload": {
     "psr-4": {

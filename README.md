@@ -6,9 +6,12 @@ Lightly inpired by <a href="https://github.com/josegonzalez/php-queuesadilla">ph
 <br>
 **Security** : Never expose this lib on /webroot directory, it was no coded for that. Keep it in no browsable dir.
 
-## No PSR firendly
+## Install
 
-I don't care about PSR.  🤷‍♂️ 
+```sh
+composer require osd84/petitequeue
+```
+
 
 
 ## Requirements
