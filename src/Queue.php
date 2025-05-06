@@ -1,10 +1,10 @@
 <?php
 
-namespace PetitCitron\PetiteQueue;
+namespace osd84\PetiteQueue;
 
 use DateTime;
-use Cake\Database\Connection;
-use Cake\Database\Driver\Sqlite;
+use PDO;
+use PDOException;
 use PetitCitron\LightLogger\Logger;
 use PetitCitron\LightLogger\NoLogger;
 
@@ -48,63 +48,63 @@ class Queue
      * Initialize Sqlite Db or open it if don't exist
      * @return bool
      */
-    public function _install()
+    public function _install(): bool
     {
         $con = $this->_getConn();
         $this->freshInstall = false;
         try {
-            $con->execute('SELECT * FROM jobs LIMIT 2');
-        }
-        catch (\PDOException $e) {
+            $r = $con->query('SELECT * FROM jobs LIMIT 2');
+        } catch (PDOException $e) {
             if ($e->getCode() === 'HY000') {
                 $this->freshInstall = true;
             }
         }
+
         if ($this->freshInstall) {
-            $query = $con->execute("CREATE TABLE IF NOT EXISTS `jobs` (
-                                      `id` INTEGER PRIMARY KEY,
-                                      `queue` VARCHAR(255) NOT NULL DEFAULT 'default',
-                                      `data` TEXT NOT NULL,
-                                      `locked` TINYINT NOT NULL DEFAULT '0',
-                                      `attempts` INTEGER DEFAULT NULL,
-                                      `created_at` DATETIME DEFAULT NULL)");
-            if ($query->errorCode() !== '00000') {
-                throw new \LogicException('Sqlite Db CREATE failed');
+            $sql = "CREATE TABLE IF NOT EXISTS `jobs` (
+                `id` INTEGER PRIMARY KEY,
+                `queue` VARCHAR(255) NOT NULL DEFAULT 'default',
+                `data` TEXT NOT NULL,
+                `locked` TINYINT NOT NULL DEFAULT '0',
+                `attempts` INTEGER DEFAULT NULL,
+                `created_at` DATETIME DEFAULT NULL
+            )";
+
+            $r = $con->exec($sql);
+            $error = $con->errorInfo();
+            if ($error[0] !== '00000') {
+                throw new \LogicException('Création de la base SQLite échouée');
             }
             return true;
         }
         return false;
     }
 
-    /**
-     * Return Db $connexion
-     * @return Connection
-     */
-    public function _getConn()
+
+    public function _getConn(): PDO
     {
         if (empty($this->connexion)) {
-            $driver = new Sqlite([
-                'database' => $this->conf['database'],
-                'cacheMetadata' => false,
-            ]);
-            $this->connexion = new Connection([
-                'driver' => $driver,
-            ]);
+            try {
+                $dsn = 'sqlite:' . $this->conf['database'];
+                $this->connexion = new PDO($dsn);
+                $this->connexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $this->connexion->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                throw new \RuntimeException('Impossible de se connecter à la base de données : ' . $e->getMessage());
+            }
         }
         return $this->connexion;
     }
 
     /**
      * Initialize the stupid file logger system or silent it
-     * @return void
      */
-    public function _setupLogger()
+    public function _setupLogger(): void
     {
         if ($this->conf['logging']) {
             $this->log = new Logger(ROOT . '/logs/', $this->conf['logfile']);
             $this->log->info('petitequeue:Queue - Log enabled');
-        }
-        else {
+        } else {
             $this->log = new NoLogger();
             $this->log->info('Nothing will be logged');
         }
@@ -115,7 +115,7 @@ class Queue
      * Add new Job/Task to queue list
      *
      *
-     * @param $callable string|array What wee need to call
+     * @param $callable array|string What wee need to call
      *                              'myfunction' => For function call
      *                              'MyClass::static' => For Static Class call
      *                              ['MyClass', 'method'] => For new Object() creation + method call
@@ -127,7 +127,7 @@ class Queue
      *
      * @return int|string|null
      */
-    public function push($callable, $args = [], $options = [])
+    public function push(array|string $callable, array $args = [], array $options = [])
     {
         if (!is_array($options)) {
             $options = ['queue' => $options];
@@ -143,22 +143,21 @@ class Queue
             'queue_time' => microtime(true),
         ]);
 
-        $q = $con->insert('jobs', [
-            'queue' => $queue,
-            'data' => $data,
-            'locked' => 0,
-            'attempts' => 0,
-            'created_at' => $datetime->format('Y-m-d H:i:s'),
-        ], [
-            'string',
-            'string',
-            'integer',
-            'integer',
-            'datetime',
+        $sql = "INSERT INTO jobs (queue, data, locked, attempts, created_at) 
+                VALUES (:queue, :data, :locked, :attempts, :created_at)";
+
+        $stmt = $con->prepare($sql);
+
+        $stmt->execute([
+            ':queue' => $queue,
+            ':data' => $data,
+            ':locked' => 0,
+            ':attempts' => 0,
+            ':created_at' => $datetime->format('Y-m-d H:i:s')
         ]);
 
-        if ($q->rowCount() == 1) {
-            $this->lastJobId = $q->lastInsertId();
+        if ($stmt->rowCount() == 1) {
+            $this->lastJobId = $con->lastInsertId();
             $this->log->info('petitequeue:Queue::push() - add Job ' . $data);
             return $this->lastJobId;
         }
@@ -166,7 +165,7 @@ class Queue
         return null;
     }
 
-    public function setting($settings, $key, $default = null)
+    public function setting(?array $settings, string $key, ?string $default = null)
     {
         if (!is_array($settings)) {
             $settings = ['queue' => $settings];
@@ -188,11 +187,11 @@ class Queue
      * Success jobs are drop from sqlite Db
      * Failed jobs are flag attempt = 1, locked = 1 and **stay** on sqlite Db
      *
-     * @param $queue string Filtering execution only for some flagged queue jobs, ex : 'critic'
+     * @param $queue string|null Filtering execution only for some flagged queue jobs, ex : 'critic'
      *
      * @return array
      */
-    public function run($queue = null)
+    public function run(string $queue = null): array
     {
         $jobs = $this->jobs($queue);
         $gTotal = count($jobs);
@@ -215,8 +214,7 @@ class Queue
 
             if ($success) {
                 $gSuccess++;
-            }
-            else {
+            } else {
                 $gFailed++;
             }
 
@@ -230,13 +228,17 @@ class Queue
      *
      * @return mixed|null
      */
-    public function job($jobId)
+    public function job(int|string $jobId): ?array
     {
         $con = $this->_getConn();
-
         $jobId = intval($jobId);
-        $job = $con->get('SELECT * FROM jobs WHERE id = ?', [$jobId], ['integer']);
-        if (empty($job)) {
+
+        $stmt = $con->prepare('SELECT * FROM jobs WHERE id = :id');
+        $stmt->execute([':id' => $jobId]);
+
+        $job = $stmt->fetch();
+
+        if ($job === false) {
             $this->log->info("petitequeue:Queue::job() - Job $jobId NotFound ");
             return null;
         }
@@ -249,10 +251,10 @@ class Queue
      *
      * @return bool
      */
-    public function force($jobId)
+    public function force(int|string $jobId): bool
     {
         $job = $this->job($jobId);
-        if(empty($job)) {
+        if (empty($job)) {
             throw new \LogicException('Job not found, force fail');
         }
         $this->log->info("petitequeue:Queue::force() - Job $jobId");
@@ -266,7 +268,7 @@ class Queue
      *
      * @return bool
      */
-    public function _perform($job)
+    public function _perform(array $job): bool
     {
         $this->log->info("petitequeue:Queue::_perform() - trying {$job['id']} Job");
 
@@ -283,17 +285,14 @@ class Queue
                 if (!empty($jobReturn)) {
                     $this->log->info("'$className'" . ' method was successful called');
                     $success = true;
-                }
-                else {
+                } else {
                     $this->log->error("'$className'" . ' method call failed, please make sure ' . $methodName . ' return something !');
                 }
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 $this->log->error("'$className' FAIL ! " . $e->getMessage());
             }
 
-        }
-        elseif (strpos($elemToCall['class'], '::')) {
+        } elseif (strpos($elemToCall['class'], '::')) {
             $infos = explode('::', $elemToCall['class']);
             $className = $infos[0];
             $methodName = $infos[1];
@@ -302,19 +301,15 @@ class Queue
                 if (!empty($jobReturn)) {
                     $this->log->info("'$className'" . ' static method was successful called');
                     $success = true;
-                }
-                else {
+                } else {
                     $this->log->error("'$className'" . ' static method call failed, please make sure ' . $methodName . ' return something !');
                 }
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 $this->log->error("'$className' FAIL ! " . $e->getMessage());
             }
 
-        }
-        // is basic Class method
-        elseif (is_string($elemToCall['class']))
-        {
+        } // is basic Class method
+        elseif (is_string($elemToCall['class'])) {
             // is classic function
             $className = $elemToCall['class'];
             try {
@@ -322,24 +317,20 @@ class Queue
                 if (!empty($jobReturn)) {
                     $this->log->info("'$className'" . ' function was successful called');
                     $success = true;
-                }
-                else {
+                } else {
                     $this->log->error("'$className'" . ' function call failed, please make sure ' . $className . ' return something !');
                 }
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 $this->log->error("'$className' FAIL ! " . $e->getMessage());
             }
 
-        }
-        else {
+        } else {
             $this->log->error('Oups, Job call failed. Make sure you import Class or function in scope !');
         }
 
         if ($success) {
             $this->drop($job['id']);
-        }
-        else {
+        } else {
             $this->addAttempts($job['id']);
         }
 
@@ -354,38 +345,45 @@ class Queue
      *
      * @return array
      */
-    public function jobs($queue = null)
+    public function jobs(?string $queue = null): array
     {
         $con = $this->_getConn();
 
         if (empty($queue)) {
-            $jobs = $con->getAll('SELECT * FROM jobs');
-        }
-        else {
-            $jobs = $con->getAll('SELECT * FROM jobs WHERE queue = :queue',
-                [$queue], ['string']);
+            $stmt = $con->prepare('SELECT * FROM jobs');
+            $stmt->execute();
+        } else {
+            $stmt = $con->prepare('SELECT * FROM jobs WHERE queue = :queue');
+            $stmt->execute([':queue' => $queue]);
         }
 
+        $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         if (empty($jobs)) {
-            $this->log->info("petitequeue:Queue::jobs() - No Jobs Found");
+            $this->log->info('petitequeue:Queue::jobs() - Aucun job trouvé');
             return [];
         }
-        $this->log->info('petitequeue:Queue::jobs() - ' . count($jobs) .' Found');
+
+        $this->log->info('petitequeue:Queue::jobs() - ' . count($jobs) . ' job(s) trouvé(s)');
         return $jobs;
+
     }
 
     /**
      * Flag the job as "Locked", it will be not exec on next "run()" call
      * @param $jobId int|string
      *
-     * @return \Cake\Database\StatementInterface
      */
-    public function markLocked($jobId)
+    public function markLocked(int $jobId): int
     {
         $con = $this->_getConn();
-        $jobId = intval($jobId);
-        return $con->execute('UPDATE jobs SET locked = 1 WHERE id = ?', [$jobId], ['integer']);
+
+        $stmt = $con->prepare('UPDATE jobs SET locked = 1 WHERE id = :id');
+        $stmt->execute([':id' => intval($jobId)]);
+
+        return $stmt->rowCount();
     }
+
 
     /**
      * Remove job from Queue and Sqlite db
@@ -393,12 +391,16 @@ class Queue
      *
      * @return int 1 : success || 0 : fail
      */
-    public function drop($jobId)
+    public function drop(int $jobId): int
     {
         $con = $this->_getConn();
-        $jobId = intval($jobId);
-        $this->log->info("petitequeue:Queue::drop() $jobId is drop");
-        return $con->delete('jobs', ['id' => $jobId], ['integer'])->count();
+
+        $stmt = $con->prepare('DELETE FROM jobs WHERE id = :id');
+        $stmt->execute([':id' => intval($jobId)]);
+
+        $this->log->info("petitequeue:Queue::drop() - Job #{$jobId} supprimé");
+
+        return $stmt->rowCount();
     }
 
     /**
@@ -407,11 +409,17 @@ class Queue
      *
      * @return int number of deleted jobs
      */
-    public function flush($queueName)
+    public function flush(string $queueName): int
     {
         $con = $this->_getConn();
-        $this->log->info("petitequeue:Queue::flush() $queueName Jobs are drop");
-        return $con->delete('jobs', ['queue' => trim($queueName)], ['string'])->count();
+
+        $stmt = $con->prepare('DELETE FROM jobs WHERE queue = :queue');
+        $stmt->execute([':queue' => trim($queueName)]);
+
+        $nbDeleted = $stmt->rowCount();
+        $this->log->info("petitequeue:Queue::flush() - {$nbDeleted} jobs supprimés de la file '{$queueName}'");
+
+        return $nbDeleted;
     }
 
 
@@ -420,24 +428,33 @@ class Queue
      *
      * @return int number of deleted jobs
      */
-    public function clear()
+    public function clear(): int
     {
         $con = $this->_getConn();
-        $this->log->info("petitequeue:Queue::clear() All Jobs are drop");
-        return $con->execute('DELETE FROM jobs WHERE 1')->count();
+
+        $stmt = $con->prepare('DELETE FROM jobs');
+        $stmt->execute();
+
+        $nbDeleted = $stmt->rowCount();
+        $this->log->info("petitequeue:Queue::clear() - {$nbDeleted} jobs supprimés");
+
+        return $nbDeleted;
     }
+
 
     /**
      * Increment 'attempts' field / counter on Job Sqlite Db
      * @param $jobId int|string
      *
-     * @return \Cake\Database\StatementInterface
      */
-    public function addAttempts($jobId)
+    public function addAttempts(int $jobId): int
     {
         $con = $this->_getConn();
-        $jobId = intval($jobId);
-        return $con->execute('UPDATE jobs SET attempts = attempts + 1 WHERE id = ?', [$jobId], ['integer']);
+
+        $stmt = $con->prepare('UPDATE jobs SET attempts = attempts + 1 WHERE id = :id');
+        $stmt->execute([':id' => intval($jobId)]);
+
+        return $stmt->rowCount();
     }
 
     /**
@@ -445,7 +462,7 @@ class Queue
      *
      * @return bool
      */
-    public function isFreshInstall()
+    public function isFreshInstall(): bool
     {
         return $this->freshInstall;
     }
