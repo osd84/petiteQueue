@@ -6,45 +6,21 @@ Lightly inpired by <a href="https://github.com/josegonzalez/php-queuesadilla">ph
 <br>
 **Security** : Never expose this lib on /webroot directory, it was no coded for that. Keep it in no browsable dir.
 
+![screen.png](screen.png)
+
+
 ## Install
 
 ```sh
 composer require osd84/petitequeue
 ```
 
-
-
 ## Requirements
 
 - PHP 7.4+
 - php_pdo_sqlite
 
-## Stable
 
-
-```sh
-wget https://github.com/PetitCitron/petiteQueue/archive/refs/tags/v1.0.0.zip
-unzip v1.0.0.zip
-cd petiteQueue-1.0.0/
-composer install --no-dev
-```
-
-As a Lib, Add in composer.json
-
-```json
-"require": {
-    "petitcitron/petitequeue": "^v1"
-  },
-"repositories": [
-{
-  "type": "vcs",
-  "url": "https://github.com/PetitCitron/petiteQueue"
-}
-   ],
-```
-```sh
-composer update
-```
 
 ## Usage
 

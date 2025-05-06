@@ -1,6 +1,6 @@
 <?php
 
-use PetitCitron\BrutalTestRunner\BrutalTestRunner;
+use osd84\BrutalTestRunner\BrutalTestRunner;
 use osd84\PetiteQueue\Queue;
 
 require dirname(__DIR__) . '/vendor/autoload.php';

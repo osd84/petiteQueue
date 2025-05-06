@@ -10,12 +10,12 @@
   ],
   "require": {
     "php": ">=7.2.0",
-    "osd84/lightlogger": "^1",
+    "osd84/lightlogger": "^2",
     "ext-pdo": "*",
     "ext-json": "*"
   },
   "require-dev": {
-    "osd84/brutaltestrunner": "^2"
+    "osd84/brutaltestrunner": "^3"
   },
   "autoload": {
     "psr-4": {

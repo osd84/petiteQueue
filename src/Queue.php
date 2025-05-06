@@ -5,8 +5,8 @@ namespace osd84\PetiteQueue;
 use DateTime;
 use PDO;
 use PDOException;
-use PetitCitron\LightLogger\Logger;
-use PetitCitron\LightLogger\NoLogger;
+use osd84\LightLogger\Logger;
+use osd84\LightLogger\NoLogger;
 
 // oldschool bootstrap
 if (!defined('ROOT')) {
